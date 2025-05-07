@@ -22,23 +22,33 @@ jobs:
         run: |
           sudo mkdir -p /usr/local/lib/android/sdk
           cd /usr/local/lib/android/sdk
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-          unzip -qq commandlinetools-linux-*.zip
-          rm commandlinetools-linux-*.zip
-          mkdir cmdline-tools && mv cmdline-tools cmdline-tools/latest
+          wget -O tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip -qq tools.zip
+          rm tools.zip
+          mkdir -p cmdline-tools/latest
+          mv cmdline-tools/* cmdline-tools/latest/
 
-      - name: Set ANDROID_HOME and update SDK
+      - name: Set environment variables
         run: |
           echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
-          echo "PATH=$PATH:/usr/local/lib/android/sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
-          yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-          /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager "platforms;android-30" "build-tools;30.0.3" "platform-tools"
+          echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> $GITHUB_ENV
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/emulator" >> $GITHUB_PATH
 
-      - name: Install SWIG
-        run: sudo apt-get update && sudo apt-get install -y swig
+      - name: Accept licenses and install SDK components
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-28" "build-tools;28.0.3"
 
       - name: Grant permission to gradlew
         run: chmod +x ./gradlew
 
       - name: Build APK
         run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: ProtonVPN-APK
+          path: app/build/outputs/apk/debug/*.apk
