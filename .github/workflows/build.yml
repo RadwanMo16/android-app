@@ -20,6 +20,8 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v2
+        with:
+          sdk-version: '30.0.3'  # نسخة مناسبة للمشروع
 
       - name: Install SWIG
         run: sudo apt-get update && sudo apt-get install -y swig
